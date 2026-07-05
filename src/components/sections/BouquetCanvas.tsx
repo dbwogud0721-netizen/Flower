@@ -1,8 +1,8 @@
 import { Image } from "@/components/ui/image";
-import { PetalPop } from "@/components/animations";
 import { Typography } from "@/components/ui/typography";
-import { flowerThumbnail, wrapImage, ribbonImage } from "@/utils/assetPaths";
 import { wrapOptions, ribbonOptions } from "@/data/flowers";
+import { bouquetPhoto } from "@/utils/assetPaths";
+import { dominantColorKey } from "@/utils/bouquetMatch";
 import type { BouquetStem } from "@/context/BouquetContext";
 
 export interface BouquetCanvasProps {
@@ -14,85 +14,61 @@ export interface BouquetCanvasProps {
   size?: number;
 }
 
-function sunflowerPoints(n: number, radius: number) {
-  const golden = Math.PI * (3 - Math.sqrt(5));
-  return Array.from({ length: n }, (_, i) => {
-    const r = radius * Math.sqrt((i + 0.5) / n);
-    const theta = i * golden;
-    return { x: r * Math.cos(theta), y: r * Math.sin(theta) };
-  });
-}
-
+/**
+ * Shows the real flower-shop photo that best matches the current selection — dominant
+ * flower color + wrap style — instead of compositing a picture from scratch. This is a
+ * deliberate scope choice (matching, not generative AI or vector art): see the "사전 촬영
+ * 조합 매칭" decision for the Bouquet Builder rebuild.
+ */
 function BouquetCanvas({ stems, wrapId, ribbonId, babyBreath, eucalyptus, size = 260 }: BouquetCanvasProps) {
   const wrap = wrapOptions.find((w) => w.id === wrapId) ?? wrapOptions[0];
   const ribbon = ribbonOptions.find((r) => r.id === ribbonId) ?? ribbonOptions[0];
+  const isEmpty = stems.length === 0;
+  const colorKey = dominantColorKey(stems);
 
-  const instances = stems.flatMap((s) => Array.from({ length: Math.min(s.count, 6) }, () => s.flowerId));
-  const filler = [
-    ...(babyBreath ? ["baby-breath", "baby-breath", "baby-breath"] : []),
-    ...(eucalyptus ? ["eucalyptus", "eucalyptus"] : []),
-  ];
-  const capped = [...instances, ...filler].slice(0, 26);
-  const isEmpty = instances.length === 0;
-  const points = sunflowerPoints(Math.max(capped.length, 1), size * 0.19);
-  const clusterCy = size * 0.44;
+  const width = size;
+  const height = size * 1.25;
 
-  const height = size * 1.2;
+  if (isEmpty) {
+    return (
+      <div
+        className="mx-auto flex flex-col items-center justify-center gap-2 rounded-[28px] border border-dashed border-blush-300/60 bg-white/40"
+        style={{ width, height }}
+      >
+        <Typography variant="caption" tone="muted">
+          꽃을 선택해주세요
+        </Typography>
+      </div>
+    );
+  }
 
   return (
-    <div className="relative mx-auto" style={{ width: size, height }}>
-      <div
-        className="absolute inset-x-0 bottom-0 overflow-hidden"
-        style={{
-          height: height * 0.5,
-          clipPath: "polygon(32% 0%, 68% 0%, 90% 100%, 10% 100%)",
-        }}
-      >
-        <Image src={wrapImage(wrap.id)} alt={wrap.name} fill variant="photo" wrapperClassName="rounded-none" />
+    <div className="mx-auto" style={{ width }}>
+      <div className="relative overflow-hidden rounded-[28px] shadow-[var(--shadow-soft-md)]" style={{ width, height }}>
+        <Image
+          src={bouquetPhoto(colorKey, wrap.id)}
+          alt={`${wrap.name} 포장의 꽃다발`}
+          fill
+          variant="photo"
+          wrapperClassName="rounded-none"
+          className="object-cover"
+        />
       </div>
-
-      <div
-        className="absolute left-1/2 -translate-x-1/2 overflow-hidden rounded-full"
-        style={{ top: height * 0.46, width: size * 0.24, height: size * 0.16 }}
-      >
-        <Image src={ribbonImage(ribbon.id)} alt={ribbon.name} fill variant="photo" wrapperClassName="rounded-none" />
-      </div>
-
-      {isEmpty && (
-        <div
-          className="absolute flex items-center justify-center rounded-full border border-dashed border-blush-300/60"
-          style={{
-            left: size / 2 - size * 0.19,
-            top: clusterCy - size * 0.19,
-            width: size * 0.38,
-            height: size * 0.38,
-          }}
+      <div className="mt-2.5 flex flex-wrap items-center justify-center gap-1.5">
+        <span
+          className="inline-flex items-center gap-1.5 rounded-full bg-white/70 px-2.5 py-1 text-[11px] text-stone"
+          aria-label={`리본: ${ribbon.name}`}
         >
-          <Typography variant="caption" tone="muted">
-            꽃을 선택해주세요
-          </Typography>
-        </div>
-      )}
-
-      {capped.map((flowerId, i) => {
-        const p = points[i];
-        const bloomSize = size * 0.16;
-        return (
-          <PetalPop
-            key={`${flowerId}-${i}`}
-            index={i}
-            className="absolute overflow-hidden rounded-full shadow-[var(--shadow-soft-sm)]"
-            style={{
-              left: size / 2 + p.x - bloomSize / 2,
-              top: clusterCy + p.y - bloomSize / 2,
-              width: bloomSize,
-              height: bloomSize,
-            }}
-          >
-            <Image src={flowerThumbnail(flowerId)} alt="" fill variant="photo" wrapperClassName="rounded-none" />
-          </PetalPop>
-        );
-      })}
+          <span className="size-2.5 rounded-full" style={{ backgroundColor: ribbon.hex }} />
+          {ribbon.name}
+        </span>
+        {babyBreath && (
+          <span className="rounded-full bg-white/70 px-2.5 py-1 text-[11px] text-stone">안개꽃 포함</span>
+        )}
+        {eucalyptus && (
+          <span className="rounded-full bg-white/70 px-2.5 py-1 text-[11px] text-stone">유칼립투스 포함</span>
+        )}
+      </div>
     </div>
   );
 }

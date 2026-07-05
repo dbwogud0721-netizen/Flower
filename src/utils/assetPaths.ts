@@ -11,12 +11,19 @@
 export const flowerThumbnail = (id: string) => `/images/flowers/${id}_thumbnail.png`;
 export const flowerDetail = (id: string) => `/images/flowers/${id}_detail.png`;
 
+/** Flower Detail screen's photo gallery — a whole "exhibition room" of shots per flower. */
+export const flowerGalleryImage = (id: string, n: number) =>
+  `/images/flowers/gallery/${id}/${id}_${String(n).padStart(2, "0")}.png`;
+
 export const wrapImage = (id: string) => `/images/wraps/wrap_${id}.png`;
 export const ribbonImage = (id: string) => `/images/ribbons/ribbon_${id}.png`;
 
 export type BouquetColorKey = "pink" | "white" | "purple" | "orange" | "mixed";
 export const bouquetHero = (color: BouquetColorKey, variant = 1) =>
   `/images/bouquets/bouquet_${color}_${String(variant).padStart(2, "0")}.png`;
+
+/** Real flower-shop bouquet photo matched by dominant color + wrap style — see bouquetMatch.ts. */
+export const bouquetPhoto = (color: BouquetColorKey, wrapId: string) => `/images/bouquets/bouquet_${color}_${wrapId}.png`;
 
 export const icon = (name: string) => `/images/icons/icon_${name}.png`;
 

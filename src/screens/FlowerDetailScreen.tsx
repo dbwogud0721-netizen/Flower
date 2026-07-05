@@ -1,34 +1,45 @@
 import { notFound } from "next/navigation";
 import { TopBar } from "@/components/layouts/TopBar";
 import { Typography } from "@/components/ui/typography";
-import { Image } from "@/components/ui/image";
 import { WishlistHeartButton } from "@/components/buttons/WishlistHeartButton";
 import { AddToBouquetButton } from "@/components/buttons/AddToBouquetButton";
+import { FlowerGalleryMasonry } from "@/components/sections/FlowerGalleryMasonry";
 import { getFlower } from "@/data/flowers";
-import { flowerDetail } from "@/utils/assetPaths";
+import { getFlowerGalleryCount } from "@/data/flowerGalleryCounts";
 
 function FlowerDetailScreen({ id }: { id: string }) {
   const flower = getFlower(id);
   if (!flower) notFound();
+  const galleryCount = getFlowerGalleryCount(flower.id);
 
   return (
     <div className="pb-8">
-      <TopBar showBack right={<WishlistHeartButton />} transparent />
+      <TopBar showBack right={<WishlistHeartButton />} />
 
-      <div className="relative h-64 overflow-hidden">
-        <Image src={flowerDetail(flower.id)} alt={flower.name} fill variant="photo" wrapperClassName="rounded-none" />
-      </div>
-
-      <div className="relative -mt-6 rounded-t-[32px] bg-ivory px-5 pt-6">
+      <div className="px-5 pb-5 pt-1 text-center">
         <Typography variant="h1">{flower.name}</Typography>
         <Typography variant="caption" tone="muted">
           {flower.nameEn}
         </Typography>
-        <Typography variant="label" tone="brand" className="mt-2 block">
+        <Typography variant="label" tone="brand" className="mt-1.5 block">
           {flower.tagline}
         </Typography>
+      </div>
 
-        <Typography variant="body" className="mt-4 text-ink/80">
+      <FlowerGalleryMasonry flowerId={flower.id} flowerName={flower.name} count={galleryCount} />
+
+      <div className="mt-7 px-5">
+        <AddToBouquetButton flowerId={flower.id} />
+      </div>
+
+      {/* Information — de-emphasized, below the gallery; this app is a photo
+          gallery first, an encyclopedia only if you scroll for it. */}
+      <div className="mt-10 border-t border-border px-5 pt-6">
+        <Typography variant="overline" tone="muted" className="mb-4 block">
+          Information
+        </Typography>
+
+        <Typography variant="body" className="text-ink/80">
           {flower.meaning}
         </Typography>
 
@@ -83,10 +94,6 @@ function FlowerDetailScreen({ id }: { id: string }) {
           <Typography variant="bodySm" tone="muted" className="mt-1.5 block">
             {flower.care}
           </Typography>
-        </div>
-
-        <div className="mt-7">
-          <AddToBouquetButton flowerId={flower.id} />
         </div>
       </div>
     </div>
